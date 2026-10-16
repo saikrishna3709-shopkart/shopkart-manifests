@@ -66,6 +66,8 @@ networkPolicy:
   enabled: true
   # Services allowed to call this one, by app label.
   allowedFrom: []
+  # Namespaces allowed to reach this service, such as the ingress controller.
+  allowedFromNamespaces: []
   # Egress to in-cluster services, by app label.
   allowedTo: []
   allowDatabaseEgress: true

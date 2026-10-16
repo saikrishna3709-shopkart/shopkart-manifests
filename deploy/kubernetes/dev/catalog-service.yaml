@@ -188,6 +188,9 @@ spec:
         - podSelector:
             matchLabels:
               app.kubernetes.io/name: order-service
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: storefront-service
         - namespaceSelector:
             matchLabels:
               kubernetes.io/metadata.name: ingress-nginx

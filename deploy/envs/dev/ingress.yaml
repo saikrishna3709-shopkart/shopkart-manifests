@@ -35,3 +35,10 @@ spec:
                 name: order-service
                 port:
                   number: 80
+          - path: (/.*)
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: storefront-service
+                port:
+                  number: 80

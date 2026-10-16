@@ -52,7 +52,7 @@ minikube addons enable metrics-server
 kubectl get nodes
 ```
 
-## 3. Build the five application images
+## 3. Build the six application images
 
 Run these commands from the `shopkart` directory. Building through Minikube
 places the images where its container runtime can use them.
@@ -63,7 +63,8 @@ $services = @(
   "inventory-service",
   "payment-service",
   "notification-service",
-  "order-service"
+  "order-service",
+  "storefront-service"
 )
 
 foreach ($service in $services) {
@@ -228,7 +229,7 @@ Use the Pod status to choose the next check:
 
 | Symptom | First thing to verify |
 |---|---|
-| `ErrImageNeverPull` | The five images exist in `minikube image ls` |
+| `ErrImageNeverPull` | The six images exist in `minikube image ls` |
 | `CreateContainerConfigError` | The `shopkart-db` Secret exists |
 | Pod is Running but `0/1` Ready | `/readyz`, PostgreSQL, and application logs |
 | HPA shows `<unknown>` | metrics-server and CPU requests |
@@ -247,7 +248,7 @@ PostgreSQL volume.
 
 ## Why Helm comes next
 
-Read the five service files side by side after this deployment works. Most of
+Read the six service files side by side after this deployment works. Most of
 their YAML is repeated; only names, images, resources, environment variables,
 HPA targets, and network allow-lists differ. Helm will later move the repeated
 shape into one template and keep only those differences in values files. That

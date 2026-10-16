@@ -197,6 +197,9 @@ spec:
     - Egress
   ingress:
     - from:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: storefront-service
         - namespaceSelector:
             matchLabels:
               kubernetes.io/metadata.name: ingress-nginx

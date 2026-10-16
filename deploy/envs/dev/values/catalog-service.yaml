@@ -24,6 +24,7 @@ networkPolicy:
   enabled: true
   allowedFrom:
     - order-service
+    - storefront-service
   allowDatabaseEgress: true
 
 externalSecret:

@@ -4,7 +4,7 @@ GitOps source of truth for the ShopKart deployment.
 
 ## Contents
 
-- `deploy/charts/`: reusable Helm chart for all five services
+- `deploy/charts/`: reusable Helm chart for all six services
 - `deploy/envs/dev/`: development namespace, ingress, CronJob, and service values
 - `deploy/argocd/`: AppProject, platform Application, and service ApplicationSet
 - `deploy/kubernetes/`: raw Kubernetes learning manifests

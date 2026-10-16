@@ -26,6 +26,8 @@ networkPolicy:
   enabled: true
   # Entry point for checkout — reached from the ingress controller.
   allowedFrom:
+    - storefront-service
+  allowedFromNamespaces:
     - ingress-nginx
   allowedTo:
     - catalog-service
