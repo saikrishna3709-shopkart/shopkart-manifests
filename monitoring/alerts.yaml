@@ -1,0 +1,144 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: shopkart-rules
+  namespace: monitoring
+  labels:
+    release: kube-prometheus-stack
+spec:
+  groups:
+    # ---------------------------------------------------------------------
+    # Availability and latency — the symptoms a user actually feels
+    # ---------------------------------------------------------------------
+    - name: shopkart.availability
+      rules:
+        - alert: ShopkartServiceDown
+          expr: up{namespace="shopkart-dev"} == 0
+          for: 2m
+          labels:
+            severity: critical
+          annotations:
+            summary: "{{ $labels.service }} is not being scraped"
+            description: "No Prometheus target has responded for 2 minutes."
+
+        - alert: ShopkartHighErrorRate
+          expr: |
+            sum by (service) (rate(http_server_requests_seconds_count{namespace="shopkart-dev",status=~"5.."}[5m]))
+              /
+            sum by (service) (rate(http_server_requests_seconds_count{namespace="shopkart-dev"}[5m]))
+              > 0.05
+          for: 5m
+          labels:
+            severity: critical
+          annotations:
+            summary: "{{ $labels.service }} is returning over 5% 5xx"
+            description: "Current ratio {{ $value | humanizePercentage }} over 5 minutes."
+
+        - alert: ShopkartHighLatency
+          expr: |
+            histogram_quantile(0.95,
+              sum by (service, le) (rate(http_server_requests_seconds_bucket{namespace="shopkart-dev"}[5m]))
+            ) > 1
+          for: 10m
+          labels:
+            severity: warning
+          annotations:
+            summary: "{{ $labels.service }} p95 latency above 1s"
+            description: "p95 is {{ $value | humanizeDuration }}."
+
+    # ---------------------------------------------------------------------
+    # Business signals — these catch failures that CPU graphs never will
+    # ---------------------------------------------------------------------
+    - name: shopkart.business
+      rules:
+        - alert: CheckoutFailureRateHigh
+          expr: |
+            sum(rate(shopkart_orders_total{outcome!~"CONFIRMED|IDEMPOTENT_REPLAY"}[10m]))
+              /
+            clamp_min(sum(rate(shopkart_orders_total[10m])), 0.001)
+              > 0.10
+          for: 10m
+          labels:
+            severity: critical
+          annotations:
+            summary: "More than 10% of checkouts are failing"
+            description: "Every infra metric can look healthy while customers cannot buy."
+
+        - alert: PaymentDeclineSpike
+          expr: |
+            sum(rate(shopkart_charges_total{outcome="DECLINED"}[10m]))
+              /
+            clamp_min(sum(rate(shopkart_charges_total[10m])), 0.001)
+              > 0.30
+          for: 10m
+          labels:
+            severity: warning
+          annotations:
+            summary: "Payment declines above 30%"
+            description: "Often an upstream gateway problem rather than genuine declines."
+
+        - alert: SagaCompensationSpike
+          expr: rate(shopkart_compensations_total[10m]) > 0.5
+          for: 10m
+          labels:
+            severity: warning
+          annotations:
+            summary: "Stock is being released back frequently"
+            description: "Checkouts are failing after stock was reserved. Check payment-service."
+
+        - alert: OversellPressure
+          expr: rate(shopkart_oversell_blocked_total[15m]) > 0.2
+          for: 15m
+          labels:
+            severity: info
+          annotations:
+            summary: "Customers are repeatedly hitting out-of-stock"
+            description: "Working as designed, but inventory needs restocking."
+
+    # ---------------------------------------------------------------------
+    # Platform — the failure modes that actually page people
+    # ---------------------------------------------------------------------
+    - name: shopkart.platform
+      rules:
+        - alert: PodCrashLooping
+          expr: increase(kube_pod_container_status_restarts_total{namespace="shopkart-dev"}[15m]) > 3
+          for: 5m
+          labels:
+            severity: critical
+          annotations:
+            summary: "{{ $labels.pod }} is restarting repeatedly"
+            description: "Check startup config, missing env vars, or a failing liveness probe."
+
+        - alert: PodOOMKilled
+          expr: |
+            kube_pod_container_status_last_terminated_reason{namespace="shopkart-dev",reason="OOMKilled"} == 1
+          for: 1m
+          labels:
+            severity: critical
+          annotations:
+            summary: "{{ $labels.pod }} was OOMKilled"
+            description: "Memory limit is too low, or the process leaks. Memory is not compressible."
+
+        - alert: HPAAtMaxReplicas
+          expr: |
+            kube_horizontalpodautoscaler_status_current_replicas{namespace="shopkart-dev"}
+              ==
+            kube_horizontalpodautoscaler_spec_max_replicas{namespace="shopkart-dev"}
+          for: 15m
+          labels:
+            severity: warning
+          annotations:
+            summary: "{{ $labels.horizontalpodautoscaler }} has no headroom left"
+            description: "Already at maxReplicas. Raise the ceiling or the service will degrade."
+
+        - alert: DeploymentReplicasMismatch
+          expr: |
+            kube_deployment_spec_replicas{namespace="shopkart-dev"}
+              !=
+            kube_deployment_status_replicas_available{namespace="shopkart-dev"}
+          for: 15m
+          labels:
+            severity: warning
+          annotations:
+            summary: "{{ $labels.deployment }} has fewer ready pods than desired"
+            description: "A stuck rollout, failing readiness probe, or unschedulable pods."

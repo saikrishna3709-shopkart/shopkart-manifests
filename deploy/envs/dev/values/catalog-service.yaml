@@ -1,0 +1,34 @@
+nameOverride: catalog-service
+
+image:
+  # Registry host is rewritten per account; the tag is bumped by CI to a git SHA.
+  repository: 000000000000.dkr.ecr.us-east-1.amazonaws.com/shopkart/catalog-service
+  tag: "PLACEHOLDER"
+
+autoscaling:
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 8
+  # Catalog is read-heavy and gets the most traffic.
+  targetCPUUtilizationPercentage: 65
+
+resources:
+  requests:
+    cpu: 150m
+    memory: 192Mi
+  limits:
+    cpu: 600m
+    memory: 384Mi
+
+networkPolicy:
+  enabled: true
+  allowedFrom:
+    - order-service
+  allowDatabaseEgress: true
+
+externalSecret:
+  enabled: true
+  remoteSecretName: shopkart-dev/rds/master
+
+env:
+  LOG_LEVEL: INFO

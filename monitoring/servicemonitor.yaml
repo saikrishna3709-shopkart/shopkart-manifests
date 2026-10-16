@@ -1,0 +1,26 @@
+# Tells Prometheus to scrape every ShopKart service. The chart already adds the
+# matching app.kubernetes.io/part-of label to each pod.
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: shopkart-services
+  namespace: monitoring
+  labels:
+    release: kube-prometheus-stack
+spec:
+  namespaceSelector:
+    matchNames:
+      - shopkart-dev
+  selector:
+    matchLabels:
+      app.kubernetes.io/part-of: shopkart
+  endpoints:
+    - port: http
+      path: /metrics
+      interval: 15s
+      scrapeTimeout: 10s
+      relabelings:
+        # Carry the service name through as a `service` label so every dashboard
+        # and alert can group by it.
+        - sourceLabels: [__meta_kubernetes_service_label_app_kubernetes_io_name]
+          targetLabel: service

@@ -1,0 +1,33 @@
+nameOverride: payment-service
+
+image:
+  repository: 000000000000.dkr.ecr.us-east-1.amazonaws.com/shopkart/payment-service
+  tag: "PLACEHOLDER"
+
+autoscaling:
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 4
+  targetCPUUtilizationPercentage: 70
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 160Mi
+  limits:
+    cpu: 400m
+    memory: 320Mi
+
+networkPolicy:
+  enabled: true
+  # Only order-service may initiate a charge — nothing else should reach payments.
+  allowedFrom:
+    - order-service
+  allowDatabaseEgress: true
+
+externalSecret:
+  enabled: true
+  remoteSecretName: shopkart-dev/rds/master
+
+env:
+  LOG_LEVEL: INFO

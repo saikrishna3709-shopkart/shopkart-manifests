@@ -1,0 +1,46 @@
+{{- if .Values.autoscaling.enabled }}
+# Requires metrics-server, and CPU requests must be set — utilisation is a
+# percentage of requests, so with no requests the HPA reports <unknown>.
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: {{ include "shopkart-service.fullname" . }}
+  labels:
+    {{- include "shopkart-service.labels" . | nindent 4 }}
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: {{ include "shopkart-service.fullname" . }}
+  minReplicas: {{ .Values.autoscaling.minReplicas }}
+  maxReplicas: {{ .Values.autoscaling.maxReplicas }}
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: {{ .Values.autoscaling.targetCPUUtilizationPercentage }}
+  behavior:
+    scaleUp:
+      stabilizationWindowSeconds: 30
+    scaleDown:
+      # Slow scale-down avoids thrashing on spiky traffic.
+      stabilizationWindowSeconds: 300
+{{- end }}
+{{- if .Values.podDisruptionBudget.enabled }}
+---
+# Protects against voluntary disruption only (node drain, cluster upgrade).
+# It does not protect against crashes.
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: {{ include "shopkart-service.fullname" . }}
+  labels:
+    {{- include "shopkart-service.labels" . | nindent 4 }}
+spec:
+  minAvailable: {{ .Values.podDisruptionBudget.minAvailable }}
+  selector:
+    matchLabels:
+      {{- include "shopkart-service.selectorLabels" . | nindent 6 }}
+{{- end }}

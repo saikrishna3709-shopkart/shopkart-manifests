@@ -1,0 +1,37 @@
+nameOverride: notification-service
+
+image:
+  repository: 000000000000.dkr.ecr.us-east-1.amazonaws.com/shopkart/notification-service
+  tag: "PLACEHOLDER"
+
+autoscaling:
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 4
+  targetCPUUtilizationPercentage: 75
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 128Mi
+  limits:
+    cpu: 400m
+    memory: 256Mi
+
+podDisruptionBudget:
+  # Off the critical path — a brief gap only delays messages, it loses no sales.
+  enabled: false
+
+networkPolicy:
+  enabled: true
+  allowedFrom:
+    - order-service
+  allowDatabaseEgress: true
+
+externalSecret:
+  enabled: true
+  remoteSecretName: shopkart-dev/rds/master
+
+env:
+  LOG_LEVEL: INFO
+  MAX_DELIVERY_ATTEMPTS: "4"

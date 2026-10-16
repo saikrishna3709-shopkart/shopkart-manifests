@@ -1,0 +1,86 @@
+# Defaults shared by every service. Per-service files in deploy/envs/<env>/ override these.
+
+nameOverride: ""
+replicaCount: 2
+revisionHistoryLimit: 5
+
+image:
+  repository: ""
+  # Always a git SHA, never "latest" — a mutable tag makes rollback impossible.
+  tag: ""
+  pullPolicy: IfNotPresent
+
+service:
+  port: 80
+  targetPort: 8000
+
+serviceAccount:
+  create: true
+  # IRSA: set to the IAM role ARN so pods get scoped AWS permissions
+  # instead of inheriting the node role.
+  roleArn: ""
+
+rollingUpdate:
+  maxSurge: 1
+  maxUnavailable: 0
+
+# Requests drive scheduling and HPA maths; limits are enforced at runtime.
+# CPU over limit is throttled, memory over limit is OOMKilled.
+resources:
+  requests:
+    cpu: 100m
+    memory: 128Mi
+  limits:
+    cpu: 500m
+    memory: 256Mi
+
+probes:
+  # Liveness is process-only. If it checked the DB, one blip would restart every pod.
+  liveness:
+    path: /healthz
+    initialDelaySeconds: 5
+    periodSeconds: 10
+    failureThreshold: 3
+  # Readiness checks dependencies, so a struggling pod leaves the Service endpoints.
+  readiness:
+    path: /readyz
+    initialDelaySeconds: 3
+    periodSeconds: 5
+    failureThreshold: 3
+  startup:
+    path: /healthz
+    periodSeconds: 5
+    failureThreshold: 12
+
+autoscaling:
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 6
+  targetCPUUtilizationPercentage: 70
+
+podDisruptionBudget:
+  enabled: true
+  minAvailable: 1
+
+networkPolicy:
+  enabled: true
+  # Services allowed to call this one, by app label.
+  allowedFrom: []
+  # Egress to in-cluster services, by app label.
+  allowedTo: []
+  allowDatabaseEgress: true
+
+externalSecret:
+  enabled: false
+  secretStoreName: aws-secrets-manager
+  # Secrets Manager entry created by Terraform.
+  remoteSecretName: ""
+
+env: {}
+podAnnotations: {}
+nodeSelector: {}
+tolerations: []
+
+# Keeps replicas off a single AZ so one zone failure cannot take the service down.
+topologySpread:
+  enabled: true

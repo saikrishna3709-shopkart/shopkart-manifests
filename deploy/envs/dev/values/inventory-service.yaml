@@ -1,0 +1,37 @@
+nameOverride: inventory-service
+
+image:
+  repository: 000000000000.dkr.ecr.us-east-1.amazonaws.com/shopkart/inventory-service
+  tag: "PLACEHOLDER"
+
+autoscaling:
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 6
+  targetCPUUtilizationPercentage: 70
+
+resources:
+  requests:
+    cpu: 150m
+    memory: 192Mi
+  limits:
+    cpu: 600m
+    memory: 384Mi
+
+podDisruptionBudget:
+  enabled: true
+  # Stock reservation is on the checkout path; never drain to zero.
+  minAvailable: 1
+
+networkPolicy:
+  enabled: true
+  allowedFrom:
+    - order-service
+  allowDatabaseEgress: true
+
+externalSecret:
+  enabled: true
+  remoteSecretName: shopkart-dev/rds/master
+
+env:
+  LOG_LEVEL: INFO

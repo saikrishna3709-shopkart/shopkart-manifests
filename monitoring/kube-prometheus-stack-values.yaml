@@ -1,0 +1,88 @@
+# Values for the kube-prometheus-stack Helm chart.
+#   helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
+#   helm upgrade --install kube-prometheus-stack prometheus-community/kube-prometheus-stack \
+#     -n monitoring --create-namespace -f monitoring/kube-prometheus-stack-values.yaml
+
+fullnameOverride: kube-prometheus-stack
+
+prometheus:
+  prometheusSpec:
+    retention: 15d
+    retentionSize: 8GB
+    # Pick up ServiceMonitors from every namespace, not just this one.
+    serviceMonitorSelectorNilUsesHelmValues: false
+    ruleSelectorNilUsesHelmValues: false
+    resources:
+      requests:
+        cpu: 250m
+        memory: 1Gi
+      limits:
+        cpu: "1"
+        memory: 2Gi
+    storageSpec:
+      volumeClaimTemplate:
+        spec:
+          storageClassName: gp3
+          accessModes: ["ReadWriteOnce"]
+          resources:
+            requests:
+              storage: 20Gi
+
+alertmanager:
+  config:
+    route:
+      receiver: slack-warning
+      groupBy: ["alertname", "service"]
+      groupWait: 30s
+      groupInterval: 5m
+      # Do not re-page every 5 minutes for something already being worked on.
+      repeatInterval: 4h
+      routes:
+        - matchers: ["severity = critical"]
+          receiver: pagerduty
+          continue: true
+        - matchers: ["severity = critical"]
+          receiver: slack-critical
+        - matchers: ["severity = info"]
+          receiver: "null"
+
+    receivers:
+      # Info-level alerts are recorded but never notify anyone.
+      - name: "null"
+
+      - name: slack-warning
+        slack_configs:
+          - channel: "#shopkart-alerts"
+            sendResolved: true
+            title: "{{ .CommonLabels.alertname }} ({{ .CommonLabels.service }})"
+            text: "{{ range .Alerts }}{{ .Annotations.description }}\n{{ end }}"
+
+      - name: slack-critical
+        slack_configs:
+          - channel: "#shopkart-incidents"
+            sendResolved: true
+
+      - name: pagerduty
+        pagerdutyConfigs:
+          - serviceKey: ${PAGERDUTY_KEY}
+
+grafana:
+  defaultDashboardsTimezone: Asia/Kolkata
+  # Grafana's own admin password comes from a Secret, never from these values.
+  admin:
+    existingSecret: grafana-admin
+  persistence:
+    enabled: true
+    storageClassName: gp3
+    size: 5Gi
+  sidecar:
+    dashboards:
+      enabled: true
+      label: grafana_dashboard
+      searchNamespace: ALL
+
+# Metrics the HPA depends on. Without metrics-server, HPA targets read <unknown>.
+kubeStateMetrics:
+  enabled: true
+nodeExporter:
+  enabled: true

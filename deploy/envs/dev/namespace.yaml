@@ -1,0 +1,52 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: shopkart-dev
+  annotations:
+    argocd.argoproj.io/sync-wave: "-1"
+  labels:
+    kubernetes.io/metadata.name: shopkart-dev
+    app.kubernetes.io/part-of: shopkart
+---
+# Deny everything first; each service's own policy re-opens only what it needs.
+# Verify enforcement after applying — a CNI that ignores NetworkPolicy will
+# happily accept this manifest and still route all traffic.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: default-deny-all
+  namespace: shopkart-dev
+spec:
+  podSelector: {}
+  policyTypes:
+    - Ingress
+    - Egress
+---
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: shopkart-dev-quota
+  namespace: shopkart-dev
+spec:
+  hard:
+    requests.cpu: "4"
+    requests.memory: 8Gi
+    limits.cpu: "8"
+    limits.memory: 16Gi
+    pods: "40"
+---
+# Guards against a pod with no requests being scheduled, which would break HPA.
+apiVersion: v1
+kind: LimitRange
+metadata:
+  name: shopkart-dev-limits
+  namespace: shopkart-dev
+spec:
+  limits:
+    - type: Container
+      defaultRequest:
+        cpu: 100m
+        memory: 128Mi
+      default:
+        cpu: 500m
+        memory: 256Mi

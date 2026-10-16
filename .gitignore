@@ -1,0 +1,12 @@
+.env
+*.pem
+*.ppk
+*.key
+*.p12
+*.tfstate
+*.tfstate.*
+*.tfvars
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

@@ -1,0 +1,51 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: shopkart-dev
+  labels:
+    kubernetes.io/metadata.name: shopkart-dev
+    app.kubernetes.io/part-of: shopkart
+    pod-security.kubernetes.io/enforce: restricted
+    pod-security.kubernetes.io/audit: restricted
+    pod-security.kubernetes.io/warn: restricted
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: default-deny-all
+  namespace: shopkart-dev
+spec:
+  podSelector: {}
+  policyTypes:
+    - Ingress
+    - Egress
+---
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: shopkart-dev-quota
+  namespace: shopkart-dev
+spec:
+  hard:
+    requests.cpu: "4"
+    requests.memory: 8Gi
+    requests.storage: 5Gi
+    limits.cpu: "8"
+    limits.memory: 16Gi
+    persistentvolumeclaims: "2"
+    pods: "40"
+---
+apiVersion: v1
+kind: LimitRange
+metadata:
+  name: shopkart-dev-limits
+  namespace: shopkart-dev
+spec:
+  limits:
+    - type: Container
+      defaultRequest:
+        cpu: 100m
+        memory: 128Mi
+      default:
+        cpu: 500m
+        memory: 256Mi
