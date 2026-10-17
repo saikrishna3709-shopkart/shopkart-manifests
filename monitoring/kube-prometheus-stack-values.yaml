@@ -7,74 +7,42 @@ fullnameOverride: kube-prometheus-stack
 
 prometheus:
   prometheusSpec:
-    retention: 15d
-    retentionSize: 8GB
+    retention: 6h
+    retentionSize: 512MB
     # Pick up ServiceMonitors from every namespace, not just this one.
     serviceMonitorSelectorNilUsesHelmValues: false
     ruleSelectorNilUsesHelmValues: false
     resources:
       requests:
         cpu: 250m
-        memory: 1Gi
+        memory: 256Mi
       limits:
         cpu: "1"
-        memory: 2Gi
-    storageSpec:
-      volumeClaimTemplate:
-        spec:
-          storageClassName: gp3
-          accessModes: ["ReadWriteOnce"]
-          resources:
-            requests:
-              storage: 20Gi
+        memory: 1Gi
 
 alertmanager:
   config:
     route:
-      receiver: slack-warning
-      groupBy: ["alertname", "service"]
-      groupWait: 30s
-      groupInterval: 5m
-      # Do not re-page every 5 minutes for something already being worked on.
-      repeatInterval: 4h
-      routes:
-        - matchers: ["severity = critical"]
-          receiver: pagerduty
-          continue: true
-        - matchers: ["severity = critical"]
-          receiver: slack-critical
-        - matchers: ["severity = info"]
-          receiver: "null"
-
+      receiver: demo
+      group_by: ["alertname", "service"]
+      group_wait: 10s
+      group_interval: 1m
+      repeat_interval: 4h
+      routes: []
     receivers:
-      # Info-level alerts are recorded but never notify anyone.
-      - name: "null"
-
-      - name: slack-warning
-        slack_configs:
-          - channel: "#shopkart-alerts"
-            sendResolved: true
-            title: "{{ .CommonLabels.alertname }} ({{ .CommonLabels.service }})"
-            text: "{{ range .Alerts }}{{ .Annotations.description }}\n{{ end }}"
-
-      - name: slack-critical
-        slack_configs:
-          - channel: "#shopkart-incidents"
-            sendResolved: true
-
-      - name: pagerduty
-        pagerdutyConfigs:
-          - serviceKey: ${PAGERDUTY_KEY}
+      - name: demo
 
 grafana:
   defaultDashboardsTimezone: Asia/Kolkata
-  # Grafana's own admin password comes from a Secret, never from these values.
-  admin:
-    existingSecret: grafana-admin
   persistence:
-    enabled: true
-    storageClassName: gp3
-    size: 5Gi
+    enabled: false
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 400m
+      memory: 256Mi
   sidecar:
     dashboards:
       enabled: true

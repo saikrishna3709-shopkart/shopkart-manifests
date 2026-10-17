@@ -29,6 +29,10 @@ spec:
             matchLabels:
               kubernetes.io/metadata.name: {{ . }}
         {{- end }}
+        {{- range .Values.networkPolicy.allowedFromCidrs }}
+        - ipBlock:
+            cidr: {{ . }}
+        {{- end }}
         # Prometheus needs to reach /metrics.
         - namespaceSelector:
             matchLabels:

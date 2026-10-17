@@ -1,7 +1,7 @@
 nameOverride: order-service
 
 image:
-  repository: 000000000000.dkr.ecr.us-east-1.amazonaws.com/shopkart/order-service
+  repository: shopkart/order-service
   tag: "PLACEHOLDER"
 
 autoscaling:

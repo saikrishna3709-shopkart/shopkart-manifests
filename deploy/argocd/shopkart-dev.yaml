@@ -15,6 +15,8 @@ spec:
   clusterResourceWhitelist:
     - group: ""
       kind: Namespace
+    - group: external-secrets.io
+      kind: ClusterSecretStore
   namespaceResourceWhitelist:
     - group: "*"
       kind: "*"
@@ -32,7 +34,7 @@ spec:
     path: deploy/envs/dev
     directory:
       recurse: false
-      include: "{namespace.yaml,ingress.yaml,notification-retry-cronjob.yaml}"
+      include: "{namespace.yaml,cluster-secret-store.yaml,ingress.yaml,notification-retry-cronjob.yaml}"
   destination:
     server: https://kubernetes.default.svc
     namespace: shopkart-dev
@@ -53,6 +55,8 @@ metadata:
   name: shopkart-dev
   namespace: argocd
 spec:
+  goTemplate: true
+  goTemplateOptions: ["missingkey=error"]
   # One Application per values file — adding a service means adding a file,
   # not hand-writing another Application manifest.
   generators:
@@ -63,7 +67,7 @@ spec:
           - path: deploy/envs/dev/values/*.yaml
   template:
     metadata:
-      name: "{{ .path.filenameNormalized | trimSuffix `-yaml` }}-dev"
+      name: '{{ .path.filename | trimSuffix ".yaml" }}-dev'
     spec:
       project: shopkart
       source:
@@ -71,6 +75,11 @@ spec:
         targetRevision: main
         path: deploy/charts/shopkart-service
         helm:
+          # Substituted with the real ECR host when this file is applied, so the
+          # AWS account ID never lands in this public repository.
+          parameters:
+            - name: image.registry
+              value: __ECR_REGISTRY__
           valueFiles:
             - "../../envs/dev/values/{{ .path.filename }}"
       destination:

@@ -13,7 +13,7 @@ app.kubernetes.io/instance: {{ .Release.Name }}
 
 {{- define "shopkart-service.labels" -}}
 {{ include "shopkart-service.selectorLabels" . }}
-app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
+app.kubernetes.io/version: {{ .Values.image.tag | quote }}
 app.kubernetes.io/part-of: shopkart
 app.kubernetes.io/managed-by: {{ .Release.Service }}
 helm.sh/chart: {{ printf "%s-%s" .Chart.Name .Chart.Version | replace "+" "_" }}

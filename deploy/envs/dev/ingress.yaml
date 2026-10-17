@@ -5,38 +5,19 @@ metadata:
   namespace: shopkart-dev
   annotations:
     argocd.argoproj.io/sync-wave: "1"
-    nginx.ingress.kubernetes.io/use-regex: "true"
-    nginx.ingress.kubernetes.io/rewrite-target: $1
-    nginx.ingress.kubernetes.io/proxy-body-size: 2m
-    nginx.ingress.kubernetes.io/proxy-read-timeout: "30"
-    # Terminates TLS with a certificate issued automatically by cert-manager.
-    cert-manager.io/cluster-issuer: letsencrypt-prod
+    alb.ingress.kubernetes.io/scheme: internet-facing
+    alb.ingress.kubernetes.io/target-type: ip
+    alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}]'
+    alb.ingress.kubernetes.io/healthcheck-path: /healthz
+    alb.ingress.kubernetes.io/healthcheck-interval-seconds: "15"
+    alb.ingress.kubernetes.io/load-balancer-attributes: routing.http.drop_invalid_header_fields.enabled=true,idle_timeout.timeout_seconds=60
 spec:
-  ingressClassName: nginx
-  tls:
-    - hosts:
-        - shopkart-dev.example.com
-      secretName: shopkart-dev-tls
+  ingressClassName: alb
   rules:
-    - host: shopkart-dev.example.com
-      http:
+    - http:
         paths:
-          - path: /api(/products(/.*)?)
-            pathType: ImplementationSpecific
-            backend:
-              service:
-                name: catalog-service
-                port:
-                  number: 80
-          - path: /api(/orders(/.*)?)
-            pathType: ImplementationSpecific
-            backend:
-              service:
-                name: order-service
-                port:
-                  number: 80
-          - path: (/.*)
-            pathType: ImplementationSpecific
+          - path: /
+            pathType: Prefix
             backend:
               service:
                 name: storefront-service

@@ -5,6 +5,8 @@ replicaCount: 2
 revisionHistoryLimit: 5
 
 image:
+  # Injected by the ArgoCD Application, never committed — keeps the AWS account ID out of git.
+  registry: ""
   repository: ""
   # Always a git SHA, never "latest" — a mutable tag makes rollback impossible.
   tag: ""
@@ -68,6 +70,8 @@ networkPolicy:
   allowedFrom: []
   # Namespaces allowed to reach this service, such as the ingress controller.
   allowedFromNamespaces: []
+  # VPC sources such as an AWS ALB using IP targets.
+  allowedFromCidrs: []
   # Egress to in-cluster services, by app label.
   allowedTo: []
   allowDatabaseEgress: true

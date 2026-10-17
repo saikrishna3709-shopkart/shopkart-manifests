@@ -1,7 +1,7 @@
 nameOverride: notification-service
 
 image:
-  repository: 000000000000.dkr.ecr.us-east-1.amazonaws.com/shopkart/notification-service
+  repository: shopkart/notification-service
   tag: "PLACEHOLDER"
 
 autoscaling:
@@ -26,6 +26,7 @@ networkPolicy:
   enabled: true
   allowedFrom:
     - order-service
+    - storefront-service
   allowDatabaseEgress: true
 
 externalSecret:

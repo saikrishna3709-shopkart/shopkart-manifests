@@ -1,8 +1,8 @@
 nameOverride: catalog-service
 
 image:
-  # Registry host is rewritten per account; the tag is bumped by CI to a git SHA.
-  repository: 000000000000.dkr.ecr.us-east-1.amazonaws.com/shopkart/catalog-service
+  # Registry host is injected by ArgoCD; the tag is bumped by CI to a git SHA.
+  repository: shopkart/catalog-service
   tag: "PLACEHOLDER"
 
 autoscaling:

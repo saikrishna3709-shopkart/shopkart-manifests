@@ -1,7 +1,7 @@
 nameOverride: storefront-service
 
 image:
-  repository: 000000000000.dkr.ecr.us-east-1.amazonaws.com/shopkart/storefront-service
+  repository: shopkart/storefront-service
   tag: "PLACEHOLDER"
 
 autoscaling:
@@ -24,11 +24,14 @@ podDisruptionBudget:
 
 networkPolicy:
   enabled: true
-  allowedFromNamespaces:
-    - ingress-nginx
+  allowedFromCidrs:
+    - 10.20.0.0/16
   allowedTo:
     - catalog-service
     - order-service
+    - inventory-service
+    - payment-service
+    - notification-service
   allowDatabaseEgress: false
 
 externalSecret:
@@ -38,4 +41,7 @@ env:
   LOG_LEVEL: INFO
   CATALOG_SERVICE_URL: http://catalog-service
   ORDER_SERVICE_URL: http://order-service
+  INVENTORY_SERVICE_URL: http://inventory-service
+  PAYMENT_SERVICE_URL: http://payment-service
+  NOTIFICATION_SERVICE_URL: http://notification-service
   DOWNSTREAM_TIMEOUT_SECONDS: "3"

@@ -51,18 +51,18 @@ spec:
       {{- end }}
       containers:
         - name: {{ include "shopkart-service.name" . }}
-          image: "{{ required "image.repository is required" .Values.image.repository }}:{{ required "image.tag is required — never use latest" .Values.image.tag }}"
+          image: "{{ required "image.registry is required" .Values.image.registry }}/{{ required "image.repository is required" .Values.image.repository }}:{{ required "image.tag is required — never use latest" .Values.image.tag }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           ports:
             - name: http
               containerPort: {{ .Values.service.targetPort }}
-          {{- with .Values.env }}
           env:
-            {{- range $key, $value := . }}
+            - name: APP_REVISION
+              value: {{ .Values.image.tag | quote }}
+            {{- range $key, $value := .Values.env }}
             - name: {{ $key }}
               value: {{ $value | quote }}
             {{- end }}
-          {{- end }}
           {{- if .Values.externalSecret.enabled }}
           envFrom:
             - secretRef:
