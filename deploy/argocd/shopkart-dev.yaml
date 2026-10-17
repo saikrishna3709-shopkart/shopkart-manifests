@@ -6,7 +6,7 @@ metadata:
 spec:
   description: ShopKart platform services
   sourceRepos:
-    - https://github.com/saikrishna3709-shopkart/shopkart-manifests.git
+    - __MANIFESTS_REPO_URL__
   destinations:
     - server: https://kubernetes.default.svc
       namespace: shopkart-dev
@@ -29,7 +29,7 @@ metadata:
 spec:
   project: shopkart
   source:
-    repoURL: https://github.com/saikrishna3709-shopkart/shopkart-manifests.git
+    repoURL: __MANIFESTS_REPO_URL__
     targetRevision: main
     path: deploy/envs/dev
     directory:
@@ -61,7 +61,7 @@ spec:
   # not hand-writing another Application manifest.
   generators:
     - git:
-        repoURL: https://github.com/saikrishna3709-shopkart/shopkart-manifests.git
+        repoURL: __MANIFESTS_REPO_URL__
         revision: main
         files:
           - path: deploy/envs/dev/values/*.yaml
@@ -71,7 +71,7 @@ spec:
     spec:
       project: shopkart
       source:
-        repoURL: https://github.com/saikrishna3709-shopkart/shopkart-manifests.git
+        repoURL: __MANIFESTS_REPO_URL__
         targetRevision: main
         path: deploy/charts/shopkart-service
         helm:

@@ -11,9 +11,30 @@ GitOps source of truth for the ShopKart deployment.
 - `deploy/kubernetes/`: raw Kubernetes learning manifests
 - `monitoring/`: Prometheus rules, ServiceMonitor, Grafana dashboard, and stack values
 
-Jenkins updates the account-specific ECR repository and immutable image tag in
-the relevant values file. ArgoCD watches this repository and reconciles EKS;
-Jenkins never runs `kubectl` against the application cluster.
+Jenkins updates the immutable image tag and repository path in the relevant
+values file. ArgoCD watches this repository and reconciles EKS; the delivery
+pipeline never runs `kubectl` against the application cluster.
+
+## Substitution Tokens
+
+Nothing here is tied to one AWS account or one GitHub owner, so two tokens must
+be replaced at apply time. They are deliberately not committed:
+
+| Token | Replace with | Where |
+| --- | --- | --- |
+| `__ECR_REGISTRY__` | `<account-id>.dkr.ecr.<region>.amazonaws.com` | `deploy/argocd/shopkart-dev.yaml` |
+| `__MANIFESTS_REPO_URL__` | the HTTPS URL of **your** fork of this repository | `deploy/argocd/shopkart-dev.yaml` |
+
+```bash
+sed -e "s|__ECR_REGISTRY__|${ECR_REGISTRY}|g" \
+    -e "s|__MANIFESTS_REPO_URL__|${MANIFESTS_REPO_URL}|g" \
+    deploy/argocd/shopkart-dev.yaml | kubectl apply -f -
+```
+
+Applying the file without substituting leaves ArgoCD pointing at a repository
+named `__MANIFESTS_REPO_URL__` and every pod in `ImagePullBackOff`. The
+`image.registry` value is injected by the ApplicationSet, so per-service values
+files carry only `shopkart/<service>` and never an account ID.
 
 Validate one service release with:
 
