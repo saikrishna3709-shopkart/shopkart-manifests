@@ -2,7 +2,7 @@ nameOverride: notification-service
 
 image:
   repository: shopkart/notification-service
-  tag: "PLACEHOLDER"
+  tag: "e739f1744f54"
 
 autoscaling:
   enabled: true
