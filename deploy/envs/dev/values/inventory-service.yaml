@@ -34,5 +34,10 @@ externalSecret:
   enabled: true
   remoteSecretName: shopkart-dev/rds/master
 
+rollingUpdate:
+  maxUnavailable: 1
+
 env:
   LOG_LEVEL: INFO
+  SPRING_DATASOURCE_HIKARI_MAXIMUMPOOLSIZE: "2"
+  SPRING_DATASOURCE_HIKARI_MINIMUMIDLE: "1"

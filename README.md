@@ -58,6 +58,21 @@ service chart, parses the shared pipeline, and checks the rendered monitoring
 configuration. Java 21, Maven, Helm, and all three sibling checkouts are required.
 The monitoring chart may be downloaded; no cluster or AWS account is contacted.
 
+## Development Database Connections
+
+Each of the five database-backed services uses a maximum of two Hikari
+connections per pod and keeps one idle connection. At the initial two replicas
+per service this budgets 20 connections, instead of 150. The configured HPA
+ceilings plus one surge pod per service can use up to 70 connections; reserve
+additional database capacity for administration and other consumers.
+
+These dev services allow one unavailable replica during rolling updates. This
+lets old pods release their connection pools without waiting for replacement
+pods to obtain a database connection first. With two healthy replicas, one can
+remain available during replacement. This availability tradeoff is specific
+to the small shared development database, not a production rollout default.
+ArgoCD applies these settings without rebuilding the application images.
+
 ## Short-Lived Monitoring
 
 After the AWS environment has been approved and provisioned, run from this
