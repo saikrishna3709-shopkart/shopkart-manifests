@@ -3,7 +3,7 @@ nameOverride: catalog-service
 image:
   # Registry host is injected by ArgoCD; the tag is bumped by CI to a git SHA.
   repository: shopkart/catalog-service
-  tag: "PLACEHOLDER"
+  tag: "e739f1744f54"
 
 autoscaling:
   enabled: true
